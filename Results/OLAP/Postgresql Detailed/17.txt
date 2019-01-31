@@ -1,0 +1,38 @@
+                                                                                             QUERY PLAN                                                                                              
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=87498645.69..87498645.70 rows=1 width=32) (actual time=11075746.285..11075746.757 rows=1 loops=1)
+   ->  Aggregate  (cost=87498645.69..87498645.70 rows=1 width=32) (actual time=11075746.283..11075746.283 rows=1 loops=1)
+         ->  Hash Join  (cost=71371392.54..87498119.13 rows=210623 width=8) (actual time=6545751.137..11075731.593 rows=54234 loops=1)
+               Hash Cond: (part.p_partkey = lineitem_1.l_partkey)
+               Join Filter: (lineitem.l_quantity < ((0.2 * avg(lineitem_1.l_quantity))))
+               Rows Removed by Join Filter: 547918
+               ->  Gather  (cost=555707.86..16517586.31 rows=639293 width=25) (actual time=149290.383..4551126.798 rows=602152 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     ->  Parallel Hash Join  (cost=554707.86..16452657.01 rows=266372 width=25) (actual time=149242.546..4587483.271 rows=200717 loops=3)
+                           Hash Cond: (lineitem.l_partkey = part.p_partkey)
+                           ->  Parallel Seq Scan on lineitem  (cost=0.00..15241615.00 rows=250032000 width=21) (actual time=16.421..4384028.236 rows=200012634 loops=3)
+                           ->  Parallel Hash  (cost=554596.89..554596.89 rows=8878 width=4) (actual time=149152.746..149152.746 rows=6694 loops=3)
+                                 Buckets: 32768  Batches: 1  Memory Usage: 1120kB
+                                 ->  Parallel Seq Scan on part  (cost=0.00..554596.89 rows=8878 width=4) (actual time=370.383..149138.234 rows=6694 loops=3)
+                                       Filter: ((p_brand = 'Brand#13'::bpchar) AND (p_container = 'WRAP PKG'::bpchar))
+                                       Rows Removed by Filter: 6659973
+               ->  Hash  (cost=70414172.28..70414172.28 rows=19766752 width=40) (actual time=6349479.115..6349479.115 rows=20000000 loops=1)
+                     Buckets: 65536  Batches: 512  Memory Usage: 2515kB
+                     ->  Finalize GroupAggregate  (cost=62938030.51..70216504.76 rows=19766752 width=40) (actual time=5619649.821..6318640.666 rows=20000000 loops=1)
+                           Group Key: lineitem_1.l_partkey
+                           ->  Gather Merge  (cost=62938030.51..69623502.20 rows=39533504 width=40) (actual time=5619649.759..6248483.167 rows=59998329 loops=1)
+                                 Workers Planned: 2
+                                 Workers Launched: 2
+                                 ->  Partial GroupAggregate  (cost=62937030.49..65059354.89 rows=19766752 width=40) (actual time=5512724.294..5845992.114 rows=19999443 loops=3)
+                                       Group Key: lineitem_1.l_partkey
+                                       ->  Sort  (cost=62937030.49..63562110.49 rows=250032000 width=13) (actual time=5512724.228..5779891.867 rows=200012634 loops=3)
+                                             Sort Key: lineitem_1.l_partkey
+                                             Sort Method: external merge  Disk: 4529704kB
+                                             Worker 0:  Sort Method: external merge  Disk: 4486048kB
+                                             Worker 1:  Sort Method: external merge  Disk: 4488280kB
+                                             ->  Parallel Seq Scan on lineitem lineitem_1  (cost=0.00..15241615.00 rows=250032000 width=13) (actual time=11.298..4507823.450 rows=200012634 loops=3)
+ Planning Time: 0.569 ms
+ Execution Time: 11076088.134 ms
+(34 rows)
+

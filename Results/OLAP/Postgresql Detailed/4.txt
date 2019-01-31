@@ -1,0 +1,27 @@
+                                                                              QUERY PLAN                                                                               
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=17588075.19..17588084.30 rows=1 width=24) (actual time=7824080.398..7824518.042 rows=1 loops=1)
+   ->  Finalize GroupAggregate  (cost=17588075.19..17588120.74 rows=5 width=24) (actual time=7824080.396..7824080.396 rows=1 loops=1)
+         Group Key: orders.o_orderpriority
+         ->  Gather Merge  (cost=17588075.19..17588120.64 rows=10 width=24) (actual time=7823847.403..7824518.010 rows=4 loops=1)
+               Workers Planned: 2
+               Workers Launched: 2
+               ->  Partial GroupAggregate  (cost=17587075.16..17587119.46 rows=5 width=24) (actual time=7823482.454..7824159.024 rows=3 loops=3)
+                     Group Key: orders.o_orderpriority
+                     ->  Sort  (cost=17587075.16..17587089.91 rows=5900 width=16) (actual time=7823197.923..7823997.373 rows=1051924 loops=3)
+                           Sort Key: orders.o_orderpriority
+                           Sort Method: external merge  Disk: 44704kB
+                           Worker 0:  Sort Method: external merge  Disk: 44712kB
+                           Worker 1:  Sort Method: external merge  Disk: 44728kB
+                           ->  Nested Loop Semi Join  (cost=0.57..17586705.63 rows=5900 width=16) (actual time=116.731..7818091.286 rows=1754124 loops=3)
+                                 ->  Parallel Seq Scan on orders  (cost=0.00..3841942.50 rows=2314193 width=20) (actual time=4.359..1340715.781 rows=1913019 loops=3)
+                                       Filter: ((o_orderdate >= '1996-11-01'::date) AND (o_orderdate < '1997-02-01 00:00:00'::timestamp without time zone))
+                                       Rows Removed by Filter: 48086981
+                                 ->  Index Scan using lineitem_pkey on lineitem  (cost=0.57..2798.99 rows=523 width=8) (actual time=3.383..3.383 rows=1 loops=5739057)
+                                       Index Cond: (l_orderkey = orders.o_orderkey)
+                                       Filter: (l_commitdate < l_receiptdate)
+                                       Rows Removed by Filter: 1
+ Planning Time: 134.727 ms
+ Execution Time: 7824524.528 ms
+(23 rows)
+
